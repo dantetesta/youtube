@@ -99,6 +99,33 @@ app.post('/api/direct-url', async (req, res) => {
   }
 });
 
+app.post('/api/formats', async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!isValidYouTubeUrl(url)) return res.status(400).json({ error: 'URL inválida' });
+    
+    const data = await ytDlpJson(url);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/download', async (req, res) => {
+  try {
+    const { url, formatId } = req.body;
+    if (!isValidYouTubeUrl(url)) return res.status(400).json({ error: 'URL inválida' });
+    
+    const directUrl = await ytDlpDirectUrl(url, formatId);
+    const filename = await ytDlpFilename(url, formatId);
+    
+    res.json({ url: directUrl, filename });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
-  console.log(`YT Downloader backend rodando em http://127.0.0.1:${PORT}`);
+  console.log(`Backend rodando na porta ${PORT}`);
+  console.log(`Acesse: http://localhost:${PORT}`);
 });
