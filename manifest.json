@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "YT Downloader - Dante Testa",
+  "description": "Exibe botão para baixar vídeos/áudio do YouTube com múltiplas qualidades via backend local (yt-dlp).",
+  "version": "0.1.1",
+  "author": "Dante Testa (https://dantetesta.com.br)",
+  "action": {
+    "default_title": "YT Downloader",
+    "default_popup": "popup/popup.html"
+  },
+  "permissions": [
+    "downloads",
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://*.youtube.com/*",
+    "http://127.0.0.1:8421/*",
+    "http://localhost:8421/*"
+  ],
+  "background": {
+    "service_worker": "service_worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.youtube.com/*"],
+      "js": ["content/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' http://localhost:* http://127.0.0.1:*; object-src 'self'"
+  }
+}

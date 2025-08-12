@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="no-js">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <meta name="theme-color" content="#0f1115" />
+  <title>YT Downloader - Baixar vídeos do YouTube</title>
+  <meta name="description" content="Extensão para baixar vídeos do YouTube em diferentes formatos e qualidades" />
+  <link rel="stylesheet" href="popup.css" />
+  <link rel="stylesheet" href="animations.css" />
+  <script src="init.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="header" role="banner">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.267 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="title">YT Downloader</h1>
+          <p class="subtitle">por <a href="https://dantetesta.com.br" target="_blank" rel="noopener noreferrer">Dante Testa</a></p>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="container" role="main" tabindex="-1">
+      <section id="status" class="status status-message" aria-live="polite" aria-atomic="true" hidden>
+        <span id="statusText">Cole uma URL do YouTube e clique em Buscar</span>
+      </section>
+
+      <section class="url-row animate-fade-in" style="animation-delay: 0.1s;">
+        <label for="videoUrl" class="sr-only">URL do vídeo</label>
+        <input 
+          id="videoUrl" 
+          type="url" 
+          placeholder="https://www.youtube.com/watch?v=..." 
+          aria-label="URL do vídeo do YouTube"
+          autocomplete="off"
+          spellcheck="false"
+          enterkeyhint="go"
+        />
+        <button id="btnFetch" class="btn primary" aria-label="Buscar formatos disponíveis">
+          <span class="btn-text">Buscar</span>
+          <span class="btn-loading" aria-hidden="true" hidden>⏳</span>
+        </button>
+      </section>
+
+      <section id="formatsSection" class="formats" hidden>
+        <div class="tabs" role="tablist" aria-label="Filtrar formatos de mídia">
+          <button class="tab active" role="tab" aria-selected="true" aria-controls="all-formats" data-filter="all">
+            Todos
+          </button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="video-formats" data-filter="video">
+            Vídeo
+          </button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="audio-formats" data-filter="audio">
+            Áudio
+          </button>
+        </div>
+        <div class="formats-content">
+          <ul id="formatsList" class="list" role="list"></ul>
+          <div id="noFormats" class="no-formats" hidden>
+            <p>Nenhum formato disponível para este vídeo.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer" role="contentinfo">
+      <small>
+        Use apenas conteúdos que você tem direito de baixar. Respeite os termos do YouTube e a legislação local.
+      </small>
+    </footer>
+  </div>
+
+  <script src="popup.js" type="module"></script>
+</body>
+</html>
