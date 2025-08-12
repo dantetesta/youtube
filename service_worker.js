@@ -51,19 +51,34 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const data = await postWithFallback('/api/direct-url', { url: msg.url, format_id: msg.format_id });
         sendResponse({ ok: true, data });
       } else if (msg.type === 'START_DOWNLOAD') {
-        // Inicia download direto no navegador
+        // Faz o download buscando o arquivo manualmente para evitar bloqueios de cabeçalhos
         const { directUrl, filename } = msg;
-        chrome.downloads.download({
-          url: directUrl,
-          filename: filename || undefined,
-          saveAs: true
-        }, (downloadId) => {
-          if (chrome.runtime.lastError) {
-            sendResponse({ ok: false, error: chrome.runtime.lastError.message });
-          } else {
-            sendResponse({ ok: true, downloadId });
-          }
-        });
+        try {
+          const response = await fetch(directUrl, {
+            // Alguns links exigem um referrer válido
+            referrer: 'https://www.youtube.com/',
+            referrerPolicy: 'no-referrer-when-downgrade'
+          });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
+
+          chrome.downloads.download({
+            url: blobUrl,
+            filename: filename || undefined,
+            saveAs: true
+          }, (downloadId) => {
+            URL.revokeObjectURL(blobUrl);
+            if (chrome.runtime.lastError) {
+              sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+            } else {
+              sendResponse({ ok: true, downloadId });
+            }
+          });
+        } catch (err) {
+          sendResponse({ ok: false, error: err.message || String(err) });
+        }
         return; // manter canal aberto até callback
       } else {
         sendResponse({ ok: false, error: 'Mensagem desconhecida' });
