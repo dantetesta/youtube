@@ -149,9 +149,12 @@ function renderFormats() {
   
   // Filtra os formatos com base na aba selecionada
   const filtered = allFormats.filter(f => {
+    const hasVideo = f.vcodec && f.vcodec !== 'none';
+    const hasAudio = f.acodec && f.acodec !== 'none';
+
     if (currentFilter === 'all') return true;
-    if (currentFilter === 'video') return /video/i.test(f.vcodec || '') && !/none/i.test(f.vcodec || '');
-    if (currentFilter === 'audio') return /audio/i.test(f.acodec || '') && !/none/i.test(f.acodec || '');
+    if (currentFilter === 'video') return hasVideo;
+    if (currentFilter === 'audio') return hasAudio && !hasVideo;
     return true;
   });
 
@@ -346,6 +349,9 @@ async function fetchFormats() {
     renderFormats();
     formatsSection.hidden = false;
     setStatus(`Encontrados ${allFormats.length} formatos disponíveis.`, 'success');
+
+    // Persiste resultados da busca
+    await chrome.storage.local.set({ lastUrl: url, lastFormats: allFormats });
   } catch (error) {
     console.error('Erro ao buscar formatos:', error);
     
@@ -656,21 +662,30 @@ async function init() {
     // Configura as abas de filtro
     bindTabs();
     
+    // Carrega dados persistidos da última busca
+    const { lastUrl, lastFormats } = await chrome.storage.local.get(['lastUrl', 'lastFormats']);
+    if (lastUrl && Array.isArray(lastFormats) && lastFormats.length) {
+      urlInput.value = lastUrl;
+      allFormats = lastFormats;
+      renderFormats();
+      formatsSection.hidden = false;
+    }
+
     // Tenta obter a URL da aba ativa
     const activeUrl = await getActiveTabUrl();
-    
-    // Se for uma URL do YouTube, preenche o campo e busca os formatos
-    if (isYouTubeWatchUrl(activeUrl)) {
+
+    // Se estiver em um vídeo do YouTube diferente do último, busca novamente
+    if (isYouTubeWatchUrl(activeUrl) && activeUrl !== lastUrl) {
       urlInput.value = activeUrl;
       fetchFormats();
-    } else {
+    } else if (!lastFormats || !lastFormats.length) {
       setStatus('Abra um vídeo do YouTube e clique em Buscar ou cole a URL manualmente.', 'info');
       urlInput.focus();
     }
-    
+
     // Adiciona o listener para o botão de busca
     btnFetch.addEventListener('click', fetchFormats);
-    
+
     // Adiciona o listener para a tecla Enter no campo de URL
     urlInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -678,18 +693,18 @@ async function init() {
       }
     });
     
-    // Adiciona o listener para o botão de busca
-    btnFetch.addEventListener('click', fetchFormats);
-    
     // Adiciona o listener para o botão de limpar o campo de URL
     const clearBtn = document.createElement('button');
     clearBtn.className = 'clear-btn';
     clearBtn.setAttribute('aria-label', 'Limpar campo de URL');
     clearBtn.innerHTML = '&times;';
-    clearBtn.addEventListener('click', () => {
+    clearBtn.addEventListener('click', async () => {
       urlInput.value = '';
       urlInput.focus();
       formatsSection.hidden = true;
+      allFormats = [];
+      currentFilter = 'all';
+      await chrome.storage.local.remove(['lastUrl', 'lastFormats']);
       setStatus('Informe a URL de um vídeo do YouTube para começar.', 'info');
     });
     
